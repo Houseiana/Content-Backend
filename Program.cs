@@ -47,9 +47,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
-            ?? new[] { "http://localhost:3000", "http://localhost:3001", "http://localhost:3333" };
-        policy.WithOrigins(origins)
+        policy.SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost"
+                    || uri.Host.EndsWith(".vercel.app")
+                    || uri.Host.EndsWith(".railway.app");
+            })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
