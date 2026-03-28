@@ -8,6 +8,10 @@ using ContentApi.Modules.Content;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Railway port binding ──
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5100";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // ── Database ──
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -43,10 +47,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:3001",
-                "http://localhost:3333")
+        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "http://localhost:3001", "http://localhost:3333" };
+        policy.WithOrigins(origins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
